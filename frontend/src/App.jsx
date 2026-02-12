@@ -56,7 +56,11 @@ function CourseCard({ data, isDone, onToggle }) {
 
   return (
     <div
-      onClick={() => onToggle(data.code)}
+       onClick={() => {
+       if (data.status === "locked") return;
+       onToggle(data.code);
+       }}
+
       style={{
         background:"#fff", border:`1.5px solid ${border}`, borderRadius:10,
         padding:"12px 14px", display:"flex", flexDirection:"column", gap:5,
@@ -68,12 +72,25 @@ function CourseCard({ data, isDone, onToggle }) {
       {/* Top row */}
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:6 }}>
         <div style={{ display:"flex", alignItems:"center", gap:7, flexWrap:"wrap", flex:1, minWidth:0 }}>
-          <input
-            type="checkbox" checked={isDone}
-            onChange={e => { e.stopPropagation(); onToggle(data.code); }}
-            onClick={e => e.stopPropagation()}
-            style={{ width:15, height:15, accentColor:"#28A745", cursor:"pointer", flexShrink:0 }}
-          />
+              <input
+        type="checkbox"
+        checked={isDone}
+        disabled={data.status === "locked"}
+        onChange={e => {
+          e.stopPropagation();
+          if (data.status === "locked") return;
+          onToggle(data.code);
+        }}
+        onClick={e => e.stopPropagation()}
+        style={{
+          width:15,
+          height:15,
+          accentColor:"#28A745",
+          cursor: data.status === "locked" ? "not-allowed" : "pointer",
+          flexShrink:0
+        }}
+      />
+
           <span style={{ fontWeight:700, fontSize:12.5, color:"#212529", whiteSpace:"nowrap" }}>
             {data.code.toUpperCase()}
           </span>
@@ -241,17 +258,43 @@ export default function App() {
   useEffect(() => { refreshCourses(new Set()); }, []);
 
   // ── Toggle course ───────────────────────────────────────────
-  const toggleCourse = useCallback((code) => {
-    setFinished(prev => {
-      const next = new Set(prev);
-      const upper = code.toUpperCase();
-      next.has(upper) ? next.delete(upper) : next.add(upper);
-      // Debounce Prolog call slightly to avoid rapid consecutive calls
-      clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => refreshCourses(next), 120);
-      return next;
-    });
-  }, [refreshCourses]);
+const COURSE_PAIRS = {
+  CS111: "CS111L", CS111L: "CS111",
+  CS112: "CS112L", CS112L: "CS112",
+  CS122: "CS122L", CS122L: "CS122",
+  CS123: "CS123L", CS123L: "CS123",
+  CS211: "CS211L", CS211L: "CS211",
+  CS212: "CS212L", CS212L: "CS212",
+  CS221: "CS221L", CS221L: "CS221",
+  CS222: "CS222L", CS222L: "CS222",
+  CS231: "CS231L", CS231L: "CS231",
+  CS311: "CS311L", CS311L: "CS311",
+  CS312: "CS312L", CS312L: "CS312",
+  CS322: "CS322L", CS322L: "CS322",
+  CS323: "CS323L", CS323L: "CS323",
+};
+
+const toggleCourse = useCallback((code) => {
+  setFinished(prev => {
+    const next = new Set(prev);
+    const upper = code.toUpperCase();
+    const pair = COURSE_PAIRS[upper];
+
+    if (next.has(upper)) {
+      next.delete(upper);
+      if (pair) next.delete(pair);
+    } else {
+      next.add(upper);
+      if (pair) next.add(pair);
+    }
+
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => refreshCourses(next), 120);
+
+    return next;
+  });
+}, [refreshCourses]);
+
 
   // ── Sidebar checker ─────────────────────────────────────────
   const handleCheck = useCallback(async () => {
