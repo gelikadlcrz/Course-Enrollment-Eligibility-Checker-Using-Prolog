@@ -207,19 +207,26 @@ prerequisite(C, []) :-
     \+ clause(prerequisite(C, _), _).
 
 % ==============================================================================
-%   STANDING LOGIC
+%   STANDING LOGIC (Dynamic Major Completion)
 % ==============================================================================
 
-% 3rd Year Standing: completed key 1st+2nd year major courses
-has_standing(Finished, third_year_standing) :-
-    member(cs111, Finished), member(cs112, Finished),
-    member(cs122, Finished), member(cs211, Finished),
-    member(cs212, Finished), member(cs221, Finished).
+% Helper: Checks if all 'CS' courses from Year X have been finished.
+% A course is a "CS major" if its Code starts with 'cs' and Type is 'CS'.
+all_cs_majors_finished(Finished, TargetYear) :-
+    findall(Code, 
+        (course(Code, _, _, TargetYear, _, _), sub_atom(Code, 0, 2, _, cs)), 
+        RequiredMajors),
+    subset(RequiredMajors, Finished).
 
-% 4th Year Standing: 3rd year standing + completed key 3rd year majors
+% 3rd Year Standing: Completed all Year 1 and Year 2 CS majors
+has_standing(Finished, third_year_standing) :-
+    all_cs_majors_finished(Finished, 1),
+    all_cs_majors_finished(Finished, 2).
+
+% 4th Year Standing: 3rd year standing + completed all Year 3 CS majors
 has_standing(Finished, fourth_year_standing) :-
     has_standing(Finished, third_year_standing),
-    member(cs313, Finished), member(cs321, Finished).
+    all_cs_majors_finished(Finished, 3).
 
 % ==============================================================================
 %   ELIGIBILITY CHECKING CORE
