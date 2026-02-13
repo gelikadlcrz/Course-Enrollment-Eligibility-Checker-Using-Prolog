@@ -281,19 +281,54 @@ const toggleCourse = useCallback((code) => {
     const pair = COURSE_PAIRS[upper];
 
     if (next.has(upper)) {
+      // Remove selected + pair
       next.delete(upper);
       if (pair) next.delete(pair);
+
+      // Cascade remove postrequisites
+      let changed = true;
+
+      while (changed) {
+        changed = false;
+
+        allData.forEach(course => {
+          const cCode = course.code.toUpperCase();
+          if (!next.has(cCode)) return;
+
+          const prereqs = (course.prerequisites || [])
+            .map(p => p.toUpperCase());
+
+          const shouldRemove = prereqs.some(req =>
+            !req.includes("STANDING") && !next.has(req)
+          );
+
+          if (shouldRemove) {
+            next.delete(cCode);
+
+            const cPair = COURSE_PAIRS[cCode];
+            if (cPair) next.delete(cPair);
+
+            changed = true;
+          }
+        });
+      }
+
     } else {
+      // Add selected + pair
       next.add(upper);
       if (pair) next.add(pair);
     }
 
     clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => refreshCourses(next), 120);
+    debounceRef.current = setTimeout(() => {
+      refreshCourses(next);
+    }, 120);
 
     return next;
   });
-}, [refreshCourses]);
+}, [allData, refreshCourses]);
+
+
 
 
   // ── Sidebar checker ─────────────────────────────────────────

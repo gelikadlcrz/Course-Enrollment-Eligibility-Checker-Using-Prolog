@@ -268,14 +268,22 @@ get_status_json(Finished) :-
             sem     = Sem,
             type    = Type,
             status  = Status,
-            missing = MissingStrs
+            missing = MissingStrs,
+            prerequisites= ReqStrs
+
         ]),
         (
             course(CodeAtom, Title, Units, Year, Sem, Type),
             atom_string(CodeAtom, Code),
             check_course(CodeAtom, Finished, StatusAtom, MissingAtoms),
             atom_string(StatusAtom, Status),
-            maplist(atom_string, MissingAtoms, MissingStrs)
+            maplist(atom_string, MissingAtoms, MissingStrs),
+
+            ( prerequisite(CodeAtom, ReqAtoms)
+                -> true
+                ;  ReqAtoms = []
+            ),
+            maplist(atom_string, ReqAtoms, ReqStrs)
         ),
         Objects
     ),
