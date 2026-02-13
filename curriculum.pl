@@ -212,21 +212,21 @@ prerequisite(C, []) :-
 
 % Helper: Checks if all 'CS' courses from Year X have been finished.
 % A course is a "CS major" if its Code starts with 'cs' and Type is 'CS'.
-all_cs_majors_finished(Finished, TargetYear) :-
-    findall(Code, 
-        (course(Code, _, _, TargetYear, _, _), sub_atom(Code, 0, 2, _, cs)), 
-        RequiredMajors),
-    subset(RequiredMajors, Finished).
+all_year_majors_finished(Finished, TargetYear) :-
+    forall(
+        course(Code, _, _, TargetYear, _, 'CS'), 
+        member(Code, Finished)
+    ).
 
-% 3rd Year Standing: Completed all Year 1 and Year 2 CS majors
+% 3rd Year Standing: Completed all Year 1 & 2 CS majors
 has_standing(Finished, third_year_standing) :-
-    all_cs_majors_finished(Finished, 1),
-    all_cs_majors_finished(Finished, 2).
+    all_year_majors_finished(Finished, 1),
+    all_year_majors_finished(Finished, 2).
 
-% 4th Year Standing: 3rd year standing + completed all Year 3 CS majors
+% 4th Year Standing: 3rd year standing + all Year 3 CS majors
 has_standing(Finished, fourth_year_standing) :-
     has_standing(Finished, third_year_standing),
-    all_cs_majors_finished(Finished, 3).
+    all_year_majors_finished(Finished, 3).
 
 % ==============================================================================
 %   ELIGIBILITY CHECKING CORE
