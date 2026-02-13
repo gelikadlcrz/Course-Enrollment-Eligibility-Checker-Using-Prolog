@@ -374,7 +374,7 @@ const toggleCourse = useCallback((code) => {
                 style={{
                   width:"100%", boxSizing:"border-box", paddingLeft:32, paddingRight:12,
                   paddingTop:8, paddingBottom:8, border:"1px solid #dee2e6", borderRadius:8,
-                  fontSize:13, outline:"none", background:"#f8f9fa"
+                  fontSize:13, outline:"none", background:"#f8f9fa", color: "black"
                 }}
               />
             </div>
@@ -436,7 +436,7 @@ const toggleCourse = useCallback((code) => {
               style={{
                 width:"100%", boxSizing:"border-box", padding:"8px 10px",
                 border:"1px solid #dee2e6", borderRadius:7, fontSize:12.5, outline:"none",
-                marginBottom:7, background:"#f8f9fa"
+                marginBottom:7, background:"#f8f9fa", color: "black"
               }}
             />
             <button onClick={handleCheck} style={{
