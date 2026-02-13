@@ -424,6 +424,9 @@ const toggleCourse = useCallback((code) => {
         {/* RIGHT SIDEBAR */}
         <div style={{ width:290, flexShrink:0, display:"flex", flexDirection:"column", gap:14 }}>
 
+        {/* Year Standing*/}
+         <YearStanding allData={allData} finished={finished} />
+
           {/* Enrollment Checker */}
           <div style={{ background:"#fff", borderRadius:12, border:"1px solid #e9ecef", padding:18 }}>
             <div style={{ fontWeight:700, fontSize:14.5, color:"#212529", marginBottom:12 }}>Enrollment Checker</div>
@@ -484,6 +487,61 @@ const toggleCourse = useCallback((code) => {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function YearStanding({ allData, finished }) {
+  const stats = useMemo(() => {
+    if (!allData || allData.length === 0) return { label: "1st Year Standing", progress: 0 };
+
+    const checkYear = (year) => {
+      const core = allData.filter(c => c.year === year && (c.type === 'CS' || c.type === 'CSE'));
+      const done = core.filter(c => finished.has(c.code.toUpperCase()));
+      return {
+        isComplete: core.length > 0 && core.length === done.length,
+        percent: core.length > 0 ? (done.length / core.length) * 100 : 0,
+        missing: core.filter(c => !finished.has(c.code.toUpperCase())).map(c => c.code)
+      };
+    };
+
+    const y1 = checkYear(1);
+    const y2 = checkYear(2);
+    const y3 = checkYear(3);
+
+    // Debugging: Open Console (F12) to see what's blocking your progress
+    if (!y1.isComplete) console.log("Missing for 2nd Year Standing:", y1.missing);
+
+    if (y1.isComplete && y2.isComplete && y3.isComplete) return { label: "4th Year Standing", progress: 100 };
+    if (y1.isComplete && y2.isComplete) return { label: "3rd Year Standing", progress: y3.percent };
+    if (y1.isComplete) return { label: "2nd Year Standing", progress: y2.percent };
+
+    return { label: "1st Year Standing", progress: y1.percent };
+  }, [allData, finished]);
+
+  const isAdvanced = stats.label !== "1st Year Standing";
+
+  return (
+    <div style={{
+      background: isAdvanced ? "linear-gradient(135deg, #003366 0%, #0052a3 100%)" : "#fff",
+      color: isAdvanced ? "#fff" : "#212529",
+      border: "1px solid #e9ecef", borderRadius: 12, padding: "18px",
+      textAlign: "center", boxShadow: "0 2px 10px rgba(0,0,0,0.05)"
+    }}>
+      <div style={{ fontSize: 10, textTransform: "uppercase", fontWeight: 700, opacity: 0.8 }}>Current Standing</div>
+      <div style={{ fontSize: 22, fontWeight: 800, margin: "4px 0" }}>{stats.label}</div>
+
+      {/* Progress Bar */}
+      <div style={{ background: "rgba(0,0,0,0.1)", height: 6, borderRadius: 10, marginTop: 10, overflow: "hidden" }}>
+        <div style={{
+          width: `${stats.progress}%`, height: "100%",
+          background: isAdvanced ? "#fff" : "#003366",
+          transition: "width 0.4s ease"
+        }} />
+      </div>
+      <div style={{ fontSize: 10, marginTop: 6, opacity: 0.8 }}>
+        {Math.round(stats.progress)}% of year core completed
       </div>
     </div>
   );
